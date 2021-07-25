@@ -101,9 +101,11 @@ def getCourses(status):
             	Cour_Subject,
             	Cour_Grade,
             	Cour_Hours,
-            	Cour_CompletedHours
+            	Cour_CompletedHours,
+                tbl_CourseTeacherChildren.CoTe_TeacherCount 
             FROM
-            	tbl_Course,
+            	tbl_Course
+            	LEFT OUTER JOIN ( SELECT CoTe_CourseId, COUNT( CoTe_TeacherId ) AS CoTe_TeacherCount FROM tbl_CourseTeacher GROUP BY CoTe_CourseId ) AS tbl_CourseTeacherChildren ON tbl_Course.Cour_Id = tbl_CourseTeacherChildren.CoTe_CourseId,
             	tbl_UserInfo,
             	tbl_CourseUser,
             	tbl_TeacherResume 
@@ -122,7 +124,7 @@ def getCourses(status):
             '''+orderDir
             cs.execute(sql,(status,studentName,userPhoneNumber,teacherName,teacherPhoneNumber))
             data = cs.fetchall()
-            dataKeys = ('cid', 'class', 'studentName', 'userPhoneNumber', 'createTime', 'teacherName', 'teacherPhoneNumber', 'title', 'subject', 'grade', 'hours', 'completedHours')
+            dataKeys = ('cid', 'class', 'studentName', 'userPhoneNumber', 'createTime', 'teacherName', 'teacherPhoneNumber', 'title', 'subject', 'grade', 'hours', 'completedHours','teacherCount')
         begin = (page-1)*perPage
         end = begin + min(perPage,len(data)-begin)
         for items in data[begin:end]:
