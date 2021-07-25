@@ -193,23 +193,12 @@ def payroll(token,sjclass):
                 '''
                 cs.execute(sql,(lastrowId,params['sid']))
             elif sjclass == 0:
-                print(params['adminName'])
-                sql = '''
-                SELECT
-	                Admi_Id 
-                    FROM
-	                tbl_Administrator 
-                WHERE
-	                Admi_Name = \'{}\'
-                '''.format(params['adminName'])
-                cs.execute(sql)
-                sid = cs.fetchone()[0]
                 sql = '''
                 INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount, PaRe_Remark )
                 VALUES
 	                (%s,%s,%s,%s,%s)
                 '''
-                cs.execute(sql,(sjclass,sid,aid,params['amount'],params['remark']))
+                cs.execute(sql,(sjclass,params['adminId'],aid,params['amount'],params['remark']))
             ret['msg'] = '发放成功'
         except Exception as e:
             ret['msg'] = str(e)
@@ -237,29 +226,24 @@ def updateRemark():
             ret['code'] = -1
     return makeRespose(ret)
 
-# 查询管理员信息
-@ulanpayroll.route('/api/backendManage/financial/payroll/getAdminInfo/<adminName>', methods=['GET'])
-def getAdminInfo(adminName):
+# 查所有Options
+@ulanpayroll.route('/api/backendManage/financial/payroll/getOptions', methods=['GET'])
+def getOptions():
     ret = retModel.copy()
+    ret['data']['Admins'] = []
     with getCursor() as cs:
         sql = '''
-        SELECT
-	        Admi_PhoneNumber,
-	        Admi_Email,
-	        Admi_Name,
-	        Admi_Sex,
-	        Admi_Academy 
-        FROM
-	        tbl_Administrator 
-        WHERE
-	        Admi_Name = '{}'
-        '''.format(adminName)
+        SELECT Admi_Id, Admi_Name, Admi_PhoneNumber
+        FROM tbl_Administrator
+        '''
         try:
+            dataKeys = ('label','value')
             cs.execute(sql)
-            data = cs.fetchone()
-            dataKeys = ('phoneNumber','email','name','sex','academy')
-            ret['data'] = dict(zip(dataKeys,data))
-            ret['msg'] = '操作成功'
+            data = cs.fetchall()
+            for items in data:
+                ret['data']['Admins'].append(
+                    dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
+                )
         except Exception as e:
             ret['msg'] = str(e)
             ret['code'] = -1

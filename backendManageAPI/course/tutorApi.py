@@ -15,36 +15,6 @@ def createCourse():
         params['status'] = 0
     with getCursor() as cs:
         sql = '''
-        SELECT
-	        UsIn_Id 
-        FROM
-	        tbl_UserInfo 
-        WHERE
-	        UsIn_PhoneNumber = {}
-        '''.format(params['userPhoneNumb'])
-        cs.execute(sql)
-        data = cs.fetchone()
-        if data:
-            params['userId'] = data[0]
-        else:
-            raise Exception('用户信息异常')
-        sql = '''
-        SELECT
-	        TeRe_Id 
-        FROM
-	        tbl_TeacherResume 
-        WHERE
-	        TeRe_PhoneNumber = {}
-        '''.format(params['teacherPhoneNumb'])
-        cs.execute(sql)
-        data = cs.fetchone()
-        if data:
-            params['teacherId'] = data[0]
-        else:
-            if params['status'] == 1:
-                raise Exception('教员信息异常')
-            params['teacherId'] = -1
-        sql = '''
         INSERT INTO tbl_Course ( Cour_Class, Cour_TeacherId, Cour_Status, Cour_Title, Cour_Subject, Cour_Grade, Cour_Remark, Cour_UserFee, Cour_TeacherFee, Cour_Hours, Cour_ShowStatus, Cour_CourseTime, Cour_CoursePlace )
         VALUES
 	        (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
@@ -70,49 +40,6 @@ def createCourse():
 	        ('COURSE',%s,%s,%s)
         '''
         cs.execute(sql,(courseId,int(params['userId']),int(params['userFee'])*int(params['hours'])))
-    return makeRespose(ret)
-
-# 通过手机号查询用户基本信息
-@tutor.route('/api/backendManage/course/tutor/getUserInfo/<int:phoneNumber>',methods=['GET'])
-def getUserInfo(phoneNumber):
-    ret = retModel.copy()
-    with getCursor() as cs:
-        sql = '''
-        SELECT
-            UsIn_Id,
-            UsIn_StudentName,
-            UsIn_StudentSex,
-            UsIn_StudentSchool,
-            UsIn_StudentGrade,
-            UsIn_ParentName
-        FROM
-            tbl_UserInfo
-        WHERE
-            UsIn_PhoneNumber = {}
-        '''.format(phoneNumber)
-        cs.execute(sql)
-        data = cs.fetchone()
-        dataKeys = ('uid', 'studentName', 'studentSex', 'studentSchool', 'studentGrade', 'parentName')
-        ret['data'] = dict(zip(dataKeys, data))
-    return makeRespose(ret)
-
-# 通过手机号查看教员信息
-@tutor.route('/api/backendManage/course/tutor/getTeacherInfo/<int:phoneNumber>', methods = ['GET'])
-def getTeacherInfo(phoneNumber):
-    ret = retModel.copy()
-    with getCursor() as cs:
-        sql = '''
-        SELECT
-        	* 
-        FROM
-        	tbl_TeacherResume 
-        WHERE
-        	TeRe_PhoneNumber = {}
-        '''.format(phoneNumber)
-        cs.execute(sql)
-        data = cs.fetchone()
-        dataKeys=('tid','tname','tsex','tnation','tpolitics','temail','tgoodSubjects','thobby','tschool','tmajor','tgrade','honours','teachExperience','selfEvaluation','freeTime','avatarURL','tphoneNumber')
-        ret['data']=dict(zip(dataKeys, data))
     return makeRespose(ret)
 
 # 获取各个阶段的所有课程基本信息
@@ -490,6 +417,44 @@ def endCourse(id):
                 ret['msg'] = '操作成功'
             else:
                 raise Exception('课程暂未完成')
+        except Exception as e:
+            ret['msg'] = str(e)
+            ret['code'] = -1
+    return makeRespose(ret)
+
+# 查所有Options
+@tutor.route('/api/backendManage/course/tutor/getOptions', methods=['GET'])
+def getOptions():
+    ret = retModel.copy()
+    ret['data']['Users'] = []
+    ret['data']['Teachers'] = []
+    with getCursor() as cs:
+        sql1 = '''
+        SELECT TeRe_Id, TeRe_Name, TeRe_PhoneNumber
+        FROM tbl_TeacherResume, tbl_Teacher
+        WHERE TeRe_Id = Teac_Id
+        AND Teac_ContractStatus = 1
+        '''
+        sql2 = '''
+        SELECT UsIn_Id, UsIn_StudentName, UsIn_ParentName, UsIn_PhoneNumber
+        FROM tbl_User, tbl_UserInfo
+        WHERE User_Id = UsIn_Id
+        AND User_DefriendStatus = 0
+        '''
+        try:
+            dataKeys = ('label','value')
+            cs.execute(sql1)
+            data = cs.fetchall()
+            for items in data:
+                ret['data']['Teachers'].append(
+                    dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
+                )
+            cs.execute(sql2)
+            data = cs.fetchall()
+            for items in data:
+                ret['data']['Users'].append(
+                    dict(zip(dataKeys,(items[1]+'（'+items[2]+'）'+'：'+items[3],items[0])))
+                )
         except Exception as e:
             ret['msg'] = str(e)
             ret['code'] = -1
