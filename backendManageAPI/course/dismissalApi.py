@@ -14,6 +14,7 @@ def getDismissalCourses(status):
     teacherPhoneNumber = '%'+(flask.request.args.get('teacherPhoneNumber')or'')+'%'
     page = int(flask.request.args.get('page'))
     perPage = int(flask.request.args.get('perPage'))
+    orderDir = flask.request.args.get('orderDir') or 'ASC'
     with getCursor() as cs:
         if status == 0:
             sql = '''
@@ -37,8 +38,8 @@ def getDismissalCourses(status):
                 AND TeRe_PhoneNumber LIKE %s
             	AND DiAp_AdminReviewStatus = %s
             ORDER BY
-            	DiAp_Id DESC
-            '''
+            	DiAp_Id 
+            '''+orderDir
             cs.execute(sql,(teacherName,teacherPhoneNumber,int(status)))
             data = cs.fetchall()
             dataKeys = ('daid','title','teacherName','teacherPhoneNumber','dismissedHour','applicationTime','userReviewStatus','userReviewTime')
@@ -69,8 +70,8 @@ def getDismissalCourses(status):
                 AND TeRe_PhoneNumber LIKE %s
             	AND DiAp_AdminReviewStatus = %s
             ORDER BY
-            	DiAp_Id DESC
-            '''
+            	DiAp_Id 
+            '''+orderDir
             cs.execute(sql,(teacherName,teacherPhoneNumber,int(status)))
             data = cs.fetchall()
             dataKeys = ('daid','title','teacherName','teacherPhoneNumber','dismissedHour','applicationTime','userReviewStatus','userReviewTime','adminName','adminReviewTime','payrollRecordId')

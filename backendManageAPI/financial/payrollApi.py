@@ -12,8 +12,9 @@ def getPayrollRecords():
     ret['data']['items'] = []
     startDate = (flask.request.args.get('dateRange[0]') or '0000-01-01') + ' 00:00:00'
     endDate = (flask.request.args.get('dateRange[1]') or '9999-12-31') + ' 23:59:59'
-    print(startDate)
-    print(endDate)
+    page = int(flask.request.args.get('page'))
+    perPage = int(flask.request.args.get('perPage'))
+    orderDir = flask.request.args.get('orderDir') or 'ASC'
     with getCursor() as cs:
         sql = '''
         SELECT
@@ -42,17 +43,21 @@ def getPayrollRecords():
 	        PaRe_Id 
         HAVING
 	        PaRe_Time BETWEEN %s 
-	        AND %s;
-        '''
+	        AND %s
+        ORDER BY PaRe_Id 
+        '''+orderDir
         cs.execute(sql,(startDate,endDate))
         data = cs.fetchall()
         dataKeys = ('prid', 'subjectClass', 'adminName', 'adminPhoneNumber', 'teacherName', 'teacherPhoneNumber', 'time', 'amount', 'aName', 'remark')
-        for items in data:
+        begin = (page-1)*perPage
+        end = begin + min(perPage,len(data)-begin)
+        for items in data[begin:end]:
             items = list(items)
             items[6] = str(items[6])
             ret['data']['items'].append(
                 dict(zip(dataKeys,items))
             )
+        ret['data']['count'] = len(data)
     return makeRespose(ret)
 
 # 查询记录详情
@@ -95,6 +100,9 @@ def getPayrollDetail(id):
 def getPayrolls():
     ret = retModel.copy()
     ret['data']['items'] = []
+    page = int(flask.request.args.get('page'))
+    perPage = int(flask.request.args.get('perPage'))
+    orderDir = flask.request.args.get('orderDir') or 'ASC'
     with getCursor() as cs:
         sql = '''
         SELECT
@@ -116,17 +124,21 @@ def getPayrolls():
 	        AND DiAp_PayrollRecordId = - 1 
         GROUP BY
 	        TeRe_Id
-        '''
+        ORDER BY
+            TeRe_Id 
+        '''+orderDir
         cs.execute(sql)
         data = cs.fetchall()
         dataKeys = ('sid', 'name','school','major','grade', 'phoneNumber', 'amount')
-        for items in data:
+        begin = (page-1)*perPage
+        end = begin + min(perPage,len(data)-begin)
+        for items in data[begin:end]:
             items = list(items)
             items[6] = str(items[6])
             ret['data']['items'].append(
                 dict(zip(dataKeys,items))
             )
-        print(ret)
+        ret['data']['count'] = len(data)
     return makeRespose(ret)
 
 # 查询可发放工资详情
@@ -177,11 +189,12 @@ def payroll(token,sjclass):
         try:
             if sjclass == 1:
                 sql = '''
-                INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount )
+                INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount, PaRe_Remark )
                 VALUES
-	                (%s,%s,%s,%s)
+	                (%s,%s,%s,%s,%s)
                 '''
-                cs.execute(sql,(sjclass,params['sid'],aid,params['amount']))
+                print(params)
+                cs.execute(sql,(sjclass,params['sid'],aid,params['amount'],params['remark']))
                 lastrowId = cs.lastrowid
                 sql = '''
                 UPDATE tbl_DismissalApplication 
