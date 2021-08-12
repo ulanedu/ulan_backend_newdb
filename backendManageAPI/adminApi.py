@@ -140,3 +140,25 @@ def updateAdminPassword(token):
         ret['code'] = -1
         ret['msg'] = '登录超时'
     return makeRespose(ret)
+
+# 上传头像
+@admin.route('/api/backendManage/admin/uploadImg', methods=['GET','POST','OPTIONS'])
+def uploadImg():
+    ret = retModel.copy()
+    img = flask.request.files.get('file')
+    path = "../static/"
+    img.save(path)
+    print(path)
+    ret['data']['file_path'] = path
+     # 获取图片文件
+    # img = flask.request.form.get('file')
+    # # path = "/static/img/"
+    # print(img)
+    # 图片名称
+    # img_name = img.filename
+    # 图片path和名称组成图片的保存路径
+    # file_path = path + img_name
+    # 保存图片
+    # img.save(file_path)
+    # print(img_name)
+    return makeRespose(ret)
