@@ -5,54 +5,60 @@ from conf.conf import *
 from conf.conn import getCursor
 
 
-wx_co = flask.Blueprint("wx_co", __name__)
+wx_common = flask.Blueprint("wx_common", __name__)
 
 
-@wx_co.route('/api/w_v1/co/getCaptcha', methods=['POST'])
+@wx_common.route('/api/weChat/common/getCaptcha', methods=['POST'])
 def getCaptcha():
+    #获取验证
     data = flask.request.get_json()
     code = sendVerifyMessage(data['phone_number'])
     if (code != -1):
         r = redis.Redis(host='localhost', port=6379, decode_responses=True)
         r.set(data['phone_number'], code, ex=15*60*1000)  # 验证码有效期15分钟
+        # r.set('food', 'mutton', ex=3)
+        # key是"food" value是"mutton" 将键值对存入redis缓存
+        #ex - 过期时间（秒）
+        #decode_responses=True:这样写存的数据是字符串格式
         return 'success'
     else:
         return 'failed', 400
 
 
-@wx_co.route('/api/w_v1/co/getPersonalCourseRecords/<int:courseId>', methods=['GET'])
+@wx_common.route('/api/weChat/common/getPersonalCourseRecords/<int:courseId>', methods=['GET'])
 def getPersonalCourseRecords(courseId):
-
     ret = {
         'code': -1,
         'msg': '',
         'data': []
     }
-
     statusMapping = ['待审核', '审核通过', '审核未通过']
 
     with getCursor() as cs:
-        sql1 = '''
-        SELECT
-            course_personal_records.id,
-            course_personal_records.title,
-            course_personal_records.hours,
-            course_personal_records.record,
-            course_personal_records.created_at,
-            course_personal_records.updated_at,
-            course_personal_records.status
-        FROM
-            course_personal_records
-        WHERE course_personal_records.courseId = %s
-        '''
+        sql = '''
+            SELECT
+                DiAp_Id,
+                DiAp_CourseContent,
+                DiAp_DismissedHour,
+                DiAp_UserEvaluation,
+                DiAp_ApplicationTime,
+                DiAp_AdminReviewTime,
+                DiAp_UserReviewStatus
+            FROM
+                tbl_DismissalApplication
+            WHERE DiAp_CourseId = {}
+            '''.format(courseId)
         try:
-            cs.execute(sql1, int(courseId))
+            cs.execute(sql)
             data = cs.fetchall()
+            dataKeys = {'daid', 'courseContent', 'dismissedHour', 'userEvaluation', 'applicationTime', 'adminReviewTime', 'userReviewStatus'}
+            #查询到的数据格式为列表
             for item in data:
                 nowItem = {}
 
                 nowItem['hours'] = item[2]
                 nowItem['statusText'] = statusMapping[item[6]]
+                #statusMapping = ['待审核', '审核通过', '审核未通过']
                 nowItem['title'] = item[1]
                 nowItem['record'] = item[3]
                 # nowItem['body'] = '课时主题\n{}\n课时记录\n{}\n'.format(
@@ -60,7 +66,9 @@ def getPersonalCourseRecords(courseId):
                 nowItem['created_at'] = str(item[4])
                 nowItem['updated_at'] = str(item[5])
                 nowItem['open'] = False
-                ret['data'].append(nowItem)
+                ret['data'].append(
+                    dict(zip(dataKeys,item))
+                )
 
             ret['code'] = 0
             ret['msg'] = '评论成功'

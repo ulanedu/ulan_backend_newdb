@@ -1,33 +1,36 @@
+from redis import DataError
 from conf.conf import *
 from conf.conn import getCursor
 import requests
 import json
 
+# 通过用户openid查询用户id
+def getUserIdByopenid(openid):
 
-def getStudentIdByopenid(openid):
-    user_id = -1
     with getCursor() as cs:
-        sql = 'SELECT user_id FROM socialite WHERE app_user_id = %s'
-        cs.execute(sql, openid)
-        res = cs.fetchone()
-        print(res)
-        if(res):
-            user_id = res[0]
+        sql = '''
+        SELECT User_Id FROM tbl_User WHERE User_OpenId = {}
+        '''.format(openid)
+        cs.execute(sql)
+        data = cs.fetchone()
+        if(data):
+            return int(data[0])
         else:
-            pass
-    return int(user_id)
+            return 0
 
 
-def getTeacherBaseInfoByopenid(openid):
-    re  =  (-1, -1)
+def getTeacherIdByopenid(openid):
+
     with getCursor() as cs:
-        sql = 'SELECT uid,teacher_status FROM `teacher` WHERE wechat_openid=%s'
-        cs.execute(sql, openid)
+        sql = '''
+        SELECT Teac_Id FROM tbl_Teacher WHERE Teac_OpenId = {}
+        '''.format(openid)
+        cs.execute(sql)
         data = cs.fetchone()
         if (data):
-            re = (data[0],data[1])
-    
-    return re
+            return int(data[0])
+        else:
+            return 0
 
 
 def getUserOpenId(code):
@@ -39,10 +42,7 @@ def getUserOpenId(code):
     )
 
     data = json.loads(requests.get(url).text)
-    print(data)
     if (data.get('errcode', 0) == 0):
         return data['openid']
     else:
         return - 1
-        
-        

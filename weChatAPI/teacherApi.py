@@ -9,7 +9,7 @@ from utils import *
 wx_teacher = flask.Blueprint("wx_teacher", __name__)
 
 
-@wx_teacher.route('/api/w_v1/teacher/isRegistered', methods=['POST'])
+@wx_teacher.route('/api/weChat/teacher/isRegistered', methods=['POST'])
 def getTeacherId():
     data = flask.request.get_json()
     code = data['code']
@@ -18,7 +18,8 @@ def getTeacherId():
     isReged = False
 
     with getCursor() as cs:
-        sql = 'SELECT uid FROM `teacher` WHERE wechat_openid=%s'
+        sql = 'SELECT Teac_id  FROM `tbl_Teacher` WHERE wechat_openid=%s'
+
         cs.execute(sql, openid)
         data = cs.fetchone()
         if (data):
@@ -27,7 +28,7 @@ def getTeacherId():
     return makeRespose({'isRegistered': isReged, 'openid': openid})
 
 
-@wx_teacher.route('/api/w_v1/teacher/register', methods=['POST'])
+@wx_teacher.route('/api/weChat/teacher/register', methods=['POST'])
 def teacherRegister():
     data = flask.request.get_json()['form']
     print(data)
@@ -42,17 +43,18 @@ def teacherRegister():
         with getCursor() as cs:
             sql1 = '''
             INSERT INTO
-            teacher(teacher_status,wechat_openid)
+            tbl_Teacher(Teac_ContractStatus,Teac_OpenId,Teac_PhoneNumber)
             VALUES (0,%s)
-            '''
+            '''#Teac_ContractStatus 签约状态(0未签约，1已签约)
             sql2 = '''
             INSERT INTO
-            teacher_resume (uid,name,phone_num,school,major,free_time)
-            SELECT uid,%s,%s,%s,%s,%s
-            FROM teacher
-            WHERE wechat_openid = %s
-            '''
+            tbl_TeacherResume (TeRe_Id,TeRe_Name,TeRe_School,TeRe_Major,TeRe_FreeTime)
+            SELECT uid,%s,%s,%s,%s
+            FROM tbl_Teacher
+            WHERE Teac_OpenId = %s
+            '''#新数据库表 teacher 手机号由tbl_TeacherResume改存在 tbl_Teacher
             openid = getUserOpenId(data['code'])
+
             requirement = {
             'name': data['name'],
             # 'sex': data['sex'],
@@ -86,7 +88,7 @@ def teacherRegister():
 
 
 # 教师 查询可接订单
-@wx_teacher.route('/api/w_v1/teacher/getOrders', methods=['POST'])
+@wx_teacher.route('/api/weChat/teacher/getOrders', methods=['POST'])
 def teacherGetOrders():
     ret = {
         'orderList': []
@@ -94,22 +96,24 @@ def teacherGetOrders():
 
     data = flask.request.get_json()
     openid = data['openid']
-    teacherId, _ = getTeacherBaseInfoByopenid(openid)
+    tid = getTeacherIdByopenid(openid)
 
     with getCursor() as cs:
         sql = '''
         SELECT
-        `courses`.id,`courses`.title,`courses`.short_description,`courses`.updated_at
+        `tbl_Course`.Cour_Id,`tbl_Course`.Cour_Title,
+        `tbl_Courses`.Cour_Subject,`tbl_Courses`.Cour_Grade,`tbl_Courses`.Cour_Remark,
+        `tbl_Courses`.Cour_CourseTime, `tbl_Courses`.Cour_CoursePlace,`tbl_Courses`.Cour_UserFee,Cour_Hours
+        `tbl_Course`.Cour_CreateTime
         FROM
-        courses
-        LEFT JOIN `course_personal` ON `courses`.id = `course_personal`.courseId
-        WHERE `courses`.category_id=0 
-        AND `courses`.deleted_at IS NULL 
-        AND `course_personal`.status = 0
-        AND `courses`.id NOT IN (SELECT courseId FROM `course_teacher_mapping` WHERE teacherId =%s)
-        ORDER BY `courses`.updated_at DESC
-        '''
-        cs.execute(sql, teacherId)
+        tbl_Course
+        LEFT JOIN `tbl_CourseUser` ON `tbl_CourseUser`.CoUs_CourseId = `tbl_Courses`.Cour_Id
+        WHERE  `tbl_Courses`.Cour_DeleteStatus = 0 
+        AND `tbl_Courses`.Cour_Status = 0
+        AND `tbl_Courses`.Cour_CompletedHours = 0 
+        ORDER BY `tbl_Courses`.Cour_CreateTime DESC
+        '''#tbl_Courses   课程状态(0分配教员，1试课中，2开课，3已结课)
+        cs.execute(sql)
 
         data = cs.fetchall()
 
@@ -118,29 +122,40 @@ def teacherGetOrders():
             retItem['id'] = item[0]
             retItem['title'] = item[1]
 #这里用了奇怪的写法
-            if type(item[3]) == type('a'):
-                retItem['publicTime'] = item[3]
+            if type(item[-1]) == type('a'):
+                retItem['publicTime'] = item[-1]
             else:
-                retItem['publicTime'] = item[3].strftime("%Y-%m-%d %H:%M")
+                retItem['publicTime'] = item[-1].strftime("%Y-%m-%d %H:%M")
 
-            detail = flask.json.loads(item[2])
-            retItem['classTime'] = detail['courseTime']
-            retItem['classPlace'] = detail['coursePlace']
-            retItem['orderRequire'] = detail['remarks']
-            retItem['subject'] = detail['subject']
-            retItem['classHours'] = detail['hours']
+            # detail = flask.json.loads(item[2])
+            # retItem['classTime'] = detail['courseTime']
+            # retItem['classPlace'] = detail['coursePlace']
+            # retItem['orderRequire'] = detail['remarks']
+            # retItem['subject'] = detail['subject']
+            # retItem['classHours'] = detail['hours']
+            #
+            # ret['orderList'].append(retItem)
+            # detail = flask.json.loads(item[2])
+            retItem['subject'] = item[2]
+            retItem['grade'] = item[3]
+            retItem['remark'] = item[4]
+            retItem['coursetime'] = item[5]
+            retItem['courseplace'] = item[6]
+            retItem['charge'] = item[7]
+            retItem['hours'] = item[8]
 
             ret['orderList'].append(retItem)
+
 
     return makeRespose(ret)
 
 
-@wx_teacher.route('/api/w_v1/teacher/candidate', methods=['POST'])
+@wx_teacher.route('/api/weChat/teacher/teacherCandidate', methods=['POST'])
 def teacherCandidate():
     data = flask.request.get_json()
     orderId = data['orderId']
     openid = data['openid']
-    teacherId, teacherStatus = getTeacherBaseInfoByopenid(openid)
+    tid = getTeacherIdByopenid(openid)
 
     ret = {
         'code': -1,
@@ -150,33 +165,34 @@ def teacherCandidate():
     if(teacherStatus == 1):
         with getCursor() as cs:
             sql1 = '''
-            SELECT 1 FROM `course_personal`
-            WHERE `courseId` = %s AND `status` = 0
+            SELECT 1 FROM  tbl_Courses
+            WHERE Cour_Id = %s AND Cour_Status = 0
             '''
             sql2 = '''
-            SELECT 1 FROM `course_teacher_mapping`
-            WHERE courseId = %s AND teacherId = %s
+            SELECT 1 FROM `tbl_CourseTeacher`
+            WHERE CoTe_CourseId = %s AND CoTe_TeacherId = %s
             '''
             sql3 = '''
-            INSERT INTO `course_teacher_mapping` (courseId,teacherId) VALUES (%s,%s)
+            INSERT INTO `tbl_CourseTeacher` (CoTe_CourseId, CoTe_TeacherId ) VALUES (%s,%s)
             '''
             try:
                 cs.execute(sql1, int(orderId))
                 isExist = cs.fetchone()
                 if (isExist):
-                    cs.execute(sql2, (int(orderId), teacherId))
+                    cs.execute(sql2, (int(orderId), tid))
                     isCandidated = cs.fetchone()
                     if (isCandidated):
                         ret['msg'] = '请勿重复投递'
                     else:
-                        cs.execute(sql3, (int(orderId), teacherId))
+                        cs.execute(sql3, (int(orderId), tid))
                         ret['code'] = 1
                         ret['msg'] = '投递成功,可至“我的订单”查看投递进度'
-
                 else:
                     ret['msg'] = '无订单信息，请刷新后再试'
             except Exception as e:
                 ret['msg'] = str(e)
+
+    # 逻辑改变！！！！！
     elif (teacherStatus == -1):
         ret['msg'] = '只有审核通过后才能接单喔'
     else:
@@ -185,7 +201,7 @@ def teacherCandidate():
     return makeRespose(ret)
 
 
-@wx_teacher.route('/api/w_v1/teacher/cancel', methods=['POST'])
+@wx_teacher.route('/api/weChat/teacher/cancel', methods=['POST'])
 def teacherCancel():
     data = flask.request.get_json()
     courseId = data['courseId']
@@ -198,11 +214,11 @@ def teacherCancel():
     }
 
     with getCursor() as cs:
-        sql1 = '''
-        DELETE FROM `course_teacher_mapping` WHERE courseId = %s AND teacherId = %s
+        sql1_v2 = '''
+        DELETE FROM `tbl_CourseTeacher` WHERE CoTe_CourseId = %s AND  CoTe_TeacherId  = %s
         '''
         try:
-            cs.execute(sql1, (int(courseId), int(teacherId)))
+            cs.execute(sql1_v2, (int(courseId), int(teacherId)))
             ret['code'] = 0
             ret['msg'] = '已取消投递'
         except Exception as e:
@@ -227,22 +243,26 @@ def teacherGetCandidatedOrders():
 
     if(teacherStatus == 1):
         with getCursor() as cs:
-            sql = '''
+            sql_v2 = '''
             SELECT
-            `courses`.id,`courses`.title,`courses`.short_description,`courses`.updated_at,`courses`.channel,
-            `course_personal`.status,
-            `course_teacher_mapping`.created_at
+            `tbl_Course`.Cour_Id,
+            `tbl_Course`.Cour_Title,
+            
+            `tbl_Courses`.Cour_Subject,`tbl_Courses`.Cour_Grade,`tbl_Courses`.Cour_Remark,
+            `tbl_Courses`.Cour_CourseTime, `tbl_Courses`.Cour_CoursePlace,`tbl_Courses`.Cour_UserFee,Cour_Hours
+            
+            `tbl_Course`.Cour_Status,
+            `tbl_CourseTeacher`.created_at
             FROM
-            `course_teacher_mapping`
-            LEFT JOIN `courses` ON `course_teacher_mapping`.courseId = `courses`.id
-            LEFT JOIN `course_personal` ON `course_teacher_mapping`.courseId = `course_personal`.courseId
-            WHERE `courses`.category_id=0 
-            AND `courses`.deleted_at IS NULL 
-            AND `course_personal`.status = %s
-            AND `course_teacher_mapping`.teacherId = %s
-            ORDER BY `course_teacher_mapping`.id DESC
-            '''
-            cs.execute(sql, (int(orderStatus), int(teacherId)))
+            `tbl_CourseTeacher`
+            LEFT JOIN `tbl_Course` ON `tbl_CourseTeacher`.CoTe_CourseId = `tbl_Courses`.Cour_Id
+            LEFT JOIN `tbl_CourseUser` ON `tbl_CourseTeacher`.CoTe_CourseId = `tbl_CourseUser`.CoUs_CourseId
+            WHERE  `tbl_Courses`.Cour_DeleteStatus = 0 
+            AND `tbl_Course`.Cour_Status = %s
+            AND `tbl_CourseTeacher`.CoTe_TeacherId = %s
+            ORDER BY `tbl_CourseTeacher`.CoTe_Time DESC
+            '''#`course_personal`.status = %s?????????????    channle
+            cs.execute(sql_v2, (int(orderStatus), int(teacherId)))
             data = cs.fetchall()
             print(data)
 
@@ -250,17 +270,25 @@ def teacherGetCandidatedOrders():
                 retItem = {}
                 retItem['id'] = item[0]
                 retItem['title'] = item[1]
-                retItem['channel'] = item[4]
-                retItem['publicTime'] = item[3].strftime("%Y-%m-%d %H:%M")
-                retItem['orderStatus'] = item[5]
-                retItem['createdTime'] = item[6].strftime("%Y-%m-%d %H:%M")
 
-                detail = flask.json.loads(item[2])
-                retItem['classTime'] = detail['courseTime']
-                retItem['classPlace'] = detail['coursePlace']
-                retItem['orderRequire'] = detail['remarks']
-                retItem['subject'] = detail['subject']
-                retItem['classHours'] = detail['hours']
+                retItem['channel'] = 0
+                retItem['publicTime'] = item[-1].strftime("%Y-%m-%d %H:%M")
+                retItem['orderStatus'] = item[-2]
+                retItem['createdTime'] = item[-1].strftime("%Y-%m-%d %H:%M")
+
+                # detail = flask.json.loads(item[2])
+                # retItem['classTime'] = detail['courseTime']
+                # retItem['classPlace'] = detail['coursePlace']
+                # retItem['orderRequire'] = detail['remarks']
+                # retItem['subject'] = detail['subject']
+                # retItem['classHours'] = detail['hours']
+                retItem['subject'] = item[2]
+                retItem['grade'] = item[3]
+                retItem['orderRequire'] = item[4]
+                retItem['classTime'] = item[5]
+                retItem['classPlace'] = item[6]
+                retItem['charge'] = item[7]
+                retItem['classHours'] = item[8]
 
                 ret['orderList'].append(retItem)
 
@@ -291,10 +319,14 @@ def teacherAddRecord():
         INSERT INTO `course_personal_records` (courseId,teacherId,hours,title,record,created_at) VALUES
         (%s,%s,%s,%s,%s,%s)
         '''
+        sql1_v2 = '''
+                INSERT INTO `tbl_DismissalApplication` (DiAp_CourseId,DiAp_DismissedHour,DiAp_CourseContent,DiAp_ApplicationTime) VALUES
+                (%s,%s,%s,%s,%s,%s)
+                '''#不需要teacherid了
         try:
-            params = (int(courseId), teacherId, int(
-                hours), title, record, timestamp)
-            cs.execute(sql1, params)
+            params = (int(courseId), int(
+                hours),  record, timestamp)
+            cs.execute(sql1_v2, params)
             ret['code'] = 0
             ret['msg'] = '记录成功'
         except Exception as e:
@@ -323,10 +355,14 @@ def teacherComment():
         INSERT INTO `course_comments` (user_id,course_id,original_content,render_content,created_at,updated_at) VALUES
         (%s,%s,%s,%s,%s,%s)
         '''
+        sql1_v2 = '''
+                INSERT INTO `tbl_CourseDiscussion` (CoDi_DiscussantId,CoDi_CourseId,CoDi_Content,CoDi_Time) VALUES
+                (%s,%s,%s,%s)
+                '''
         try:
-            params = (-int(teacherId), int(courseId), original_content,
-                      "<p>{}</p>".format(original_content), timestamp, timestamp)
-            cs.execute(sql1, params)
+            params = (-int(teacherId), int(courseId),
+                      "<p>{}</p>".format(original_content), timestamp)
+            cs.execute(sql1_v2, params)
             ret['code'] = 0
             ret['msg'] = '评论成功'
         except Exception as e:
@@ -344,15 +380,15 @@ def getTeacherResume():
     Tid, _ = getTeacherBaseInfoByopenid(openid)
     
     with getCursor() as cs:
-        sql = '''
+        sql_v2 = '''
         SELECT *
-        FROM teacher_resume
-        WHERE uid=%s
+        FROM tbl_TeacherResume
+        WHERE TeRe_Id=%s
         '''
-        cs.execute(sql,int(Tid))
+        cs.execute(sql_v2,int(Tid))
         data = cs.fetchone()
         print(Tid)
-        dataKeys=('Tid','name','sex','nation','politics','email','phone_number','skilled','hobbies','school','major','grade','honour','teachExp','evaluation','avatarURL','free_time')
+        dataKeys=('Tid','name','sex','nation','politics','email','skilled','hobbies','school','major','grade','honour','teachExp','evaluation','free_time','avatarURL','phone_number')
         ret['data']=dict(zip(dataKeys, data))
     return makeRespose(ret)
 
@@ -377,8 +413,22 @@ def updateResume():
         SET name=%s,sex=%s,nation=%s,politics=%s,email=%s,phone_num=%s,skilled=%s,hobbies=%s,school=%s,major=%s,grade=%s,honour=%s,teach_exp=%s,evaluation=%s,avatar_url=%s,free_time=%s
         WHERE uid = %s
         '''
+        sql_v2 = '''
+                UPDATE tbl_TeacherResume
+                SET TeRe_Name=%s,TeRe_Sex=%s,TeRe_Nation=%s,TeRe_PoliticalStatus=%s,TeRe_Email=%s,TeRe_GoodSubjects=%s,TeRe_Hobby=%s,school=%s
+                ,TeRe_Major=%s,TeRe_Grade=%s,TeRe_Honors=%s,TeRe_TeachExperience=%s,TeRe_SelfEvaluation=%s,TeRe_AvatarURL=%s,TeRe_FreeTime=%s,TeRe_PhoneNumber=%s
+                WHERE TeRe_Id = %s
+                '''
+        sql2_v2 = '''
+                        UPDATE tbl_Teacher
+                        SET Teac_PhoneNumber=%s
+                        WHERE Teac_Id = %s
+                        '''#phone
         try:
-            cs.execute(sql,(data['name'],data['sex'],data['nation'],data['politics'],data['email'],data['phone_number'],data['skilled'],data['hobbies'],data['school'],data['major'],data['grade'],data['honour'],data['teachExp'],data['evaluation'],data['avatarURL'],data['free_time'],int(Tid)))
+            cs.execute(sql_v2,(data['name'],data['sex'],data['nation'],data['politics'],data['email'],data['skilled'],data['hobbies'],data['school'],data['major'],data['grade'],data['honour'],data['teachExp'],data['evaluation'],data['avatarURL'],data['free_time'],data['phone_number'],int(Tid)))
+            cs.execute(sql2_v2, (
+             data['phone_number']))
+
             ret['code'] = 0
             ret['msg'] = '修改成功'
             print(data['name'])
@@ -387,33 +437,3 @@ def updateResume():
             print(e)
 
     return makeRespose(ret)
-    
-# 筛选教师
-@wx_teacher.route('/api/w_v1/teacher/filterTeachers', methods=['POST'])
-def filterTeachers():
-    ret = retModel.copy()
-    data = flask.request.get_json()
-    print(data)
-    data = data['subjects']
-    skilled = "\'%"
-    for i in range(len(data)):
-        skilled = skilled + data[i] + "%"
-    skilled = skilled + "\'"
-    ret = retModel.copy()
-    ret['data']['items']=[]
-    with getCursor() as cs:
-        sql = '''
-        SELECT teacher_resume.uid,teacher_resume.name,teacher_resume.school,teacher_resume.major,teacher_resume.phone_num,teacher_resume.skilled,teacher_resume.honour,teacher_resume.evaluation,teacher_resume.avatar_url
-        FROM teacher, teacher_resume
-        WHERE teacher.uid=teacher_resume.uid and teacher.teacher_status = 1 and teacher_resume.skilled like 
-        ''' + skilled
-        print(sql)
-        cs.execute(sql)
-        data = cs.fetchall()
-        dataKeys=('Tid','name','school','major','phoneNumber','skilled','honour','evaluation','avatar_url')
-        for items in data:
-            ret['data']['items'].append(
-                dict(zip(dataKeys,items))
-            )
-    return makeRespose(ret)
-        
