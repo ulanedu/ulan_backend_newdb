@@ -265,12 +265,9 @@ def assignTeacher(cid,tid):
         WHERE
         	Cour_Id = %s
         '''
-        try:
-            cs.execute(sql,(tid,cid))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql,(tid,cid))
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 修改课程(订单)信息
@@ -299,13 +296,11 @@ def updateCourse(id):
         WHERE
         	Orde_CommodityId = %s
         '''
-        try:
-            cs.execute(sql1,(params['title'],params['subject'],params['grade'],params['remark'],params['userFee'],params['teacherFee'],params['hours'],params['courseTime'],params['coursePlace'],id))
-            cs.execute(sql2,(int(params['hours'])*int(params['userFee']),id))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+
+        cs.execute(sql1,(params['title'],params['subject'],params['grade'],params['remark'],params['userFee'],params['teacherFee'],params['hours'],params['courseTime'],params['coursePlace'],id))
+        cs.execute(sql2,(int(params['hours'])*int(params['userFee']),id))
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 快速修改展示状态
@@ -320,12 +315,9 @@ def updateCourseShowStatus(id):
         WHERE
         	Cour_Id = %s
         '''
-        try:
-            cs.execute(sql,(params['showStatus'],id))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql,(params['showStatus'],id))
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 删除课程(订单)
@@ -346,13 +338,11 @@ def deleteCourse(id):
         WHERE
         	Orde_CommodityId = {}
         '''.format(id)
-        try:
-            cs.execute(sql1)
-            cs.execute(sql2)
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+
+        cs.execute(sql1)
+        cs.execute(sql2)
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 恢复课程(订单)
@@ -373,13 +363,10 @@ def restoreCourse(id):
         	( SELECT CoUs_UserId FROM tbl_CourseUser WHERE CoUs_CourseId = %s ),
         	( SELECT Cour_Hours * Cour_UserFee FROM tbl_Course WHERE Cour_Id = %s ))
         '''
-        try:
-            cs.execute(sql1)
-            cs.execute(sql2,(id,id,id))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql1)
+        cs.execute(sql2,(id,id,id))
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 彻底删除课程(订单)
@@ -392,12 +379,9 @@ def deleteCoursePermanent(id):
         WHERE
         	Cour_Id = {};
         '''.format(id)
-        try:
-            cs.execute(sql)
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql)
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 结课
@@ -412,16 +396,13 @@ def endCourse(id):
 	        Cour_CompletedHours = Cour_Hours 
 	        AND Cour_Id = {}
         '''.format(id)
-        try:
-            cs.execute(sql)
-            rowcount = cs.rowcount
-            if rowcount == 1:
-                ret['msg'] = '操作成功'
-            else:
-                raise Exception('课程暂未完成')
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql)
+        rowcount = cs.rowcount
+        if rowcount == 1:
+            ret['msg'] = '操作成功'
+        else:
+            raise Exception('课程暂未完成')
+
     return makeRespose(ret)
 
 # 查所有Options
@@ -443,21 +424,17 @@ def getOptions():
         WHERE User_Id = UsIn_Id
         AND User_DefriendStatus = 0
         '''
-        try:
-            dataKeys = ('label','value')
-            cs.execute(sql1)
-            data = cs.fetchall()
-            for items in data:
-                ret['data']['Teachers'].append(
-                    dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
-                )
-            cs.execute(sql2)
-            data = cs.fetchall()
-            for items in data:
-                ret['data']['Users'].append(
-                    dict(zip(dataKeys,(items[1]+'（'+items[2]+'）'+'：'+items[3],items[0])))
-                )
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        dataKeys = ('label','value')
+        cs.execute(sql1)
+        data = cs.fetchall()
+        for items in data:
+            ret['data']['Teachers'].append(
+                dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
+            )
+        cs.execute(sql2)
+        data = cs.fetchall()
+        for items in data:
+            ret['data']['Users'].append(
+                dict(zip(dataKeys,(items[1]+'（'+items[2]+'）'+'：'+items[3],items[0])))
+            )
     return makeRespose(ret)

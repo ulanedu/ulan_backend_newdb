@@ -112,12 +112,9 @@ def evaluateTeacher(tid,token):
         VALUES
 	        (%s,%s,%s)
         '''
-        try:
-            cs.execute(sql,(aid,tid,params['content']))
-            ret['msg'] = '评价成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql,(aid,tid,params['content']))
+        ret['msg'] = '评价成功'
+
     return makeRespose(ret)
 
 # 删除评价
@@ -146,10 +143,7 @@ def updateContractStatus(tid):
         WHERE
 	        Teac_Id = {}
         '''.format(tid)
-        try:
-            cs.execute(sql)
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql)
+        ret['msg'] = '操作成功'
+        
     return makeRespose(ret)

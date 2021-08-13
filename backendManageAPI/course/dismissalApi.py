@@ -161,16 +161,12 @@ def passApplication(daid,token):
         WHERE
 	        DiAp_Id = %s;
         '''
-        try:
-            cs.execute(sql)
-            data = cs.fetchone()
-            data = list(data)
-            cs.execute(sql1,(data[0],data[1]))
-            cs.execute(sql2,(aid,daid))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql)
+        data = cs.fetchone()
+        data = list(data)
+        cs.execute(sql1,(data[0],data[1]))
+        cs.execute(sql2,(aid,daid))
+        ret['msg'] = '操作成功'
 
     return makeRespose(ret)
 
@@ -189,11 +185,7 @@ def refuseApplication(daid,token):
         WHERE
 	        DiAp_Id = %s
         '''
-        try:
-            cs.execute(sql,(int(aid),int(daid)))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql,(int(aid),int(daid)))
+        ret['msg'] = '操作成功'
         
     return makeRespose(ret)

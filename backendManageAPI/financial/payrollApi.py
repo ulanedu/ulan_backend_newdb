@@ -186,36 +186,32 @@ def payroll(token,sjclass):
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
     aid = r.get('token:'+token)
     with getCursor() as cs:
-        try:
-            if sjclass == 1:
-                sql = '''
-                INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount, PaRe_Remark )
-                VALUES
-	                (%s,%s,%s,%s,%s)
-                '''
-                print(params)
-                cs.execute(sql,(sjclass,params['sid'],aid,params['amount'],params['remark']))
-                lastrowId = cs.lastrowid
-                sql = '''
-                UPDATE tbl_DismissalApplication 
-                SET DiAp_PayrollRecordId = %s 
-                WHERE
-	                DiAp_CourseId IN ( SELECT Cour_Id FROM tbl_Course WHERE Cour_TeacherId = %s ) 
-	                AND DiAp_AdminReviewStatus = 1 
-	                AND DiAp_PayrollRecordId = -1
-                '''
-                cs.execute(sql,(lastrowId,params['sid']))
-            elif sjclass == 0:
-                sql = '''
-                INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount, PaRe_Remark )
-                VALUES
-	                (%s,%s,%s,%s,%s)
-                '''
-                cs.execute(sql,(sjclass,params['adminId'],aid,params['amount'],params['remark']))
-            ret['msg'] = '发放成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        if sjclass == 1:
+            sql = '''
+            INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount, PaRe_Remark )
+            VALUES
+	            (%s,%s,%s,%s,%s)
+            '''
+            print(params)
+            cs.execute(sql,(sjclass,params['sid'],aid,params['amount'],params['remark']))
+            lastrowId = cs.lastrowid
+            sql = '''
+            UPDATE tbl_DismissalApplication 
+            SET DiAp_PayrollRecordId = %s 
+            WHERE
+	            DiAp_CourseId IN ( SELECT Cour_Id FROM tbl_Course WHERE Cour_TeacherId = %s ) 
+	            AND DiAp_AdminReviewStatus = 1 
+	            AND DiAp_PayrollRecordId = -1
+            '''
+            cs.execute(sql,(lastrowId,params['sid']))
+        elif sjclass == 0:
+            sql = '''
+            INSERT INTO tbl_PayrollRecord ( PaRe_SubjectClass, PaRe_SubjectId, PaRe_AdminId, PaRe_Amount, PaRe_Remark )
+            VALUES
+	            (%s,%s,%s,%s,%s)
+            '''
+            cs.execute(sql,(sjclass,params['adminId'],aid,params['amount'],params['remark']))
+        ret['msg'] = '发放成功'
     return makeRespose(ret)
 
 # 快速编辑备注
@@ -225,18 +221,15 @@ def updateRemark():
     params = flask.request.get_json()
     print(params)
     with getCursor() as cs:
-        try:
-            sql = '''
-            UPDATE tbl_PayrollRecord 
-            SET PaRe_Remark = %s 
-            WHERE
-	            PaRe_Id = %s
-            '''
-            cs.execute(sql,(params['remark'],params['prid']))
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        sql = '''
+        UPDATE tbl_PayrollRecord 
+        SET PaRe_Remark = %s 
+        WHERE
+	        PaRe_Id = %s
+        '''
+        cs.execute(sql,(params['remark'],params['prid']))
+        ret['msg'] = '操作成功'
+
     return makeRespose(ret)
 
 # 查所有Options
@@ -249,15 +242,12 @@ def getOptions():
         SELECT Admi_Id, Admi_Name, Admi_PhoneNumber
         FROM tbl_Administrator
         '''
-        try:
-            dataKeys = ('label','value')
-            cs.execute(sql)
-            data = cs.fetchall()
-            for items in data:
-                ret['data']['Admins'].append(
-                    dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
-                )
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        dataKeys = ('label','value')
+        cs.execute(sql)
+        data = cs.fetchall()
+        for items in data:
+            ret['data']['Admins'].append(
+                dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
+            )
+            
     return makeRespose(ret)

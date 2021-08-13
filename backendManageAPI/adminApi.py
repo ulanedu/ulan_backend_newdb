@@ -49,14 +49,9 @@ def login():
 def logout(token):
     ret = retModel.copy()
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-    try:
-        r.delete('token'+token)
-        ret['msg'] = '操作成功'
-    except Exception as e:
-        print(e)
-        ret['msg'] = str(e)
-        ret['code'] = -1
-        return makeRespose(ret)
+    r.delete('token'+token)
+    ret['msg'] = '操作成功'
+    
     return makeRespose(ret)
 
 # 获取管理员信息

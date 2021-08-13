@@ -142,11 +142,8 @@ def updateDefriendStatus(id):
         WHERE
 	        User_Id = {}
         '''.format(id)
-        try:
-            cs.execute(sql)
-            ret['msg'] = '操作成功'
-        except Exception as e:
-            ret['msg'] = str(e)
-            ret['code'] = -1
+        cs.execute(sql)
+        ret['msg'] = '操作成功'
+        
     return makeRespose(ret)
 

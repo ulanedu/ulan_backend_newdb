@@ -1,6 +1,5 @@
 import flask
 import redis
-import time
 from conf.conf import *
 from conf.conn import getCursor
 from weChatAPI.utils import *
@@ -11,8 +10,8 @@ wx_teacher = flask.Blueprint("wx_teacher", __name__)
 # 检查是否已注册
 @wx_teacher.route('/api/weChat/teacher/isRegistered', methods=['POST'])
 def isRegistered():
-    data = flask.request.get_json()
-    code = data['code']
+    params = flask.request.get_json()
+    code = params['code']
     openid = getUserOpenId(code)
 
     isReged = False
@@ -21,38 +20,33 @@ def isRegistered():
 
     return makeRespose({'isRegistered': isReged, 'openid': openid})
 
-# 注册（需要完善流程）
+# 注册（注册->引导完善简历）
 @wx_teacher.route('/api/weChat/teacher/register', methods=['POST'])
 def register():
     ret = retModel.copy()
-    data = flask.request.get_json()['form']
-    print(data)
+    params = flask.request.get_json()
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-    verifyCode = r.get(data['phoneNumber'])
+    verifyCode = r.get(params['phoneNumber'])
 
-    if (int(verifyCode) == int(data['captcha'])):
+    if (int(verifyCode) == int(params['captcha'])):
         with getCursor() as cs:
-            # ！！！！！！！！！！！！！！！需要增加并发控制，另外注册流程要完善
             sql1 = '''
             INSERT INTO tbl_Teacher ( Teac_OpenId, Teac_PhoneNumber )
             VALUES
             	(%s, %s);
             '''
             sql2 = '''
-            INSERT INTO tbl_TeacherResume ( TeRe_Name, TeRe_School, TeRe_Major, TeRe_FreeTime )
+            INSERT INTO tbl_TeacherResume ( TeRe_PhoneNumber )
             VALUES
-            	(%s, %s, %s, %s);
-            '''
-            openid = getUserOpenId(data['code'])
-
-            try:
-                cs.execute(sql1,(openid,data['phoneNumber']))
-                cs.execute(sql2,(data['name'],data['school'],data['major'],data['free_time']))
-                ret['code'] = 1000
-            except Exception as e:
-                ret['msg'] = str(e)
+            	({});
+            '''.format(params['phoneNumber'])
+            openid = getUserOpenId(params['code'])
+            cs.execute(sql1,(openid,params['phoneNumber']))
+            cs.execute(sql2)
+            ret['msg'] = '注册成功！'
     else:
-        ret['code'] = -1  # 验证码错误
+        ret['msg'] = '验证码错误！'
+        ret['code'] = -1
 
     return makeRespose(ret)
 
@@ -125,15 +119,12 @@ def candidate():
         VALUES
         	(%s, %s)
         '''
-        try:
-            cs.execute(sql1)
-            data = cs.fetchone()
-            if (int(data[0]) == 0):
-                raise Exception("请联系优兰管理员，签约后才能投递哦！")
-            cs.execute(sql2, (int(cid),int(tid)))
-            ret['msg'] = '投递成功！'
-        except Exception as e:
-            ret['msg'] = str(e)
+        cs.execute(sql1)
+        data = cs.fetchone()
+        if (int(data[0]) == 0):
+            raise Exception("请联系管理员，签约后才能投递哦！")
+        cs.execute(sql2, (int(cid),int(tid)))
+        ret['msg'] = '投递成功！'
 
     return makeRespose(ret)
 
@@ -154,12 +145,9 @@ def cancel():
         	CoTe_CourseId = %s 
         	AND CoTe_TeacherId = %s
         '''
-        try:
-            cs.execute(sql, (int(cid), int(tid)))
-            ret['code'] = 0
-            ret['msg'] = '已取消投递'
-        except Exception as e:
-            ret['msg'] = str(e)
+        cs.execute(sql, (int(cid), int(tid)))
+        ret['code'] = 0
+        ret['msg'] = '已取消投递'
 
     return makeRespose(ret)
 
@@ -201,7 +189,6 @@ def GetCandidatedOrders():
         cs.execute(sql, (int(orderStatus), int(tid)))
         data = cs.fetchall()
         dataKeys = ('cid', 'tid', 'title', 'subject', 'grade', 'remark', 'courseTime', 'coursePlace', 'teacherFee', 'hours', 'status', 'createTime')
-        print(data)
         for item in data:
             item = list(item)
             # item[1] : 1(分配给了教员) 0(未分配) -1(分配阶段且未分配给教员)
@@ -235,12 +222,8 @@ def dismissalApplication():
         VALUES
 	        (% s,% s,% s,% s,% s)
         '''
-        try:
-            cs.execute(sql, (data['cid'],data['dismissedHour'],data['courseContent'],data['startTime'],data['courseContent']))
-            ret['msg'] = '申请成功'
-        except Exception as e:
-            ret['code'] = -1
-            ret['msg'] = str(e)
+        cs.execute(sql, (data['cid'],data['dismissedHour'],data['courseContent'],data['startTime'],data['courseContent']))
+        ret['msg'] = '申请成功'
 
     return makeRespose(ret)
 
@@ -257,12 +240,8 @@ def courseDiscussion():
         VALUES
         	(%s, 0, %s, %s)
         '''
-        try:
-            cs.execute(sql, (data['cid'],tid,data['content']))
-            ret['msg'] = '发布成功'
-        except Exception as e:
-            ret['code'] = -1
-            ret['msg'] = str(e)
+        cs.execute(sql, (data['cid'],tid,data['content']))
+        ret['msg'] = '发布成功'
 
     return makeRespose(ret)
 
@@ -318,11 +297,7 @@ def updateResume():
         WHERE
         	TeRe_Id = %s
         '''
-        try:
-            cs.execute(sql_v2,(data['name'],data['sex'],data['nation'],data['politics'],data['email'],data['skilled'],data['hobbies'],data['school'],data['major'],data['grade'],data['honour'],data['teachExp'],data['evaluation'],data['avatarURL'],data['free_time'],data['phone_number'],int(tid)))
-            ret['msg'] = '修改成功'
-        except Exception as e:
-            ret['code'] = -1
-            ret['msg'] = str(e)
+        cs.execute(sql_v2,(data['name'],data['sex'],data['nation'],data['politics'],data['email'],data['skilled'],data['hobbies'],data['school'],data['major'],data['grade'],data['honour'],data['teachExp'],data['evaluation'],data['avatarURL'],data['free_time'],data['phone_number'],int(tid)))
+        ret['msg'] = '修改成功'
 
     return makeRespose(ret)

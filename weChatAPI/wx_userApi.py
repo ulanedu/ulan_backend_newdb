@@ -28,7 +28,6 @@ def queryPersonalCourse(status,openid):
         FROM tbl_CourseUser LEFT JOIN tbl_Course ON CoUs_CourseId = Cour_Id
         WHERE Cour_DeleteStatus = 0 AND CoUs_UserId=%s AND Cour_Status = %s
         '''
-        #short_description
         cs.execute(sql, (int(uid),int(status)))
         data = cs.fetchall()
         dataKeys = ('cid', 'title', 'subject', 'grade', 'remark',
