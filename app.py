@@ -1,11 +1,12 @@
 from flask import Flask, request
 from flask_cors import CORS
-# from v2 import orderApi, courseApi, teacherApi, authApi, resumesApi
-# from wechatAppAPI_v1 import wx_studentApi, wx_teacherApi, wx_commonApi
+
 from backendManageAPI import adminApi, dashboardApi
 from backendManageAPI.course import tutorApi, dismissalApi
 from backendManageAPI.personnel import teacherApi,userApi
 from backendManageAPI.financial import orderApi,payrollApi
+
+from weChatAPI import wx_userApi, wx_teacherApi, wx_commonApi
 
 app = Flask(__name__)
 CORS(app, resources=r'/*')
@@ -22,6 +23,10 @@ app.register_blueprint(userApi.user)
 
 app.register_blueprint(orderApi.order)
 app.register_blueprint(payrollApi.ulanpayroll)
+
+app.register_blueprint(wx_commonApi.wx_common)
+app.register_blueprint(wx_userApi.wx_user)
+app.register_blueprint(wx_teacherApi.wx_teacher)
 
 
 # @app.before_request
