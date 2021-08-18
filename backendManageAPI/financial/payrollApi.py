@@ -93,6 +93,7 @@ def getPayrollDetail(id):
             ret['data']['items'].append(
                 dict(zip(dataKeys,items))
             )
+        ret['data']['count'] = len(data)
     return makeRespose(ret)
 
 # 查询可发放工资
@@ -176,6 +177,7 @@ def getBeforePayrollDetail(tid):
             ret['data']['items'].append(
                 dict(zip(dataKeys,items))
             )
+        ret['data']['count'] = len(data)
     return makeRespose(ret)
 
 # 发放工资
@@ -250,4 +252,23 @@ def getOptions():
                 dict(zip(dataKeys,(items[1]+'：'+items[2],items[0])))
             )
             
+    return makeRespose(ret)
+
+@ulanpayroll.route('/api/backendManage/financial/payroll/cancelPayroll/<int:prid>',methods = ['POST'])
+def cancelPayroll(prid):
+    ret = retModel.copy()
+    with getCursor() as cs:
+        sql1 = '''
+        DELETE FROM tbl_PayrollRecord
+        WHERE PaRe_Id = {}
+        '''.format(prid)
+        sql2 = '''
+        UPDATE tbl_DismissalApplication 
+        SET DiAp_PayrollRecordId = -1 
+        WHERE
+	        DiAp_PayrollRecordId = {} 
+        '''.format(prid)
+        cs.execute(sql1)
+        cs.execute(sql2)
+        ret['msg'] = '操作成功！'
     return makeRespose(ret)
