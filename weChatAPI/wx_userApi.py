@@ -7,7 +7,7 @@ from utils import *
 wx_user = flask.Blueprint("wx_user", __name__)
 
 # 获取用户各阶段课程
-@wx_user.route('/api/weChat/user/queryPersonalCourse/<int:status>/<openid>')
+@wx_user.route('/api/weChat/user/queryPersonalCourse/<int:status>/<openid>', methods=['GET'])
 def queryPersonalCourse(status,openid):
     ret = retModel.copy()
     ret['data']['items'] = []
@@ -153,5 +153,6 @@ def reserveTeacher(openid, tid):
 	        ('COURSE',%s,%s)
         '''
         cs.execute(sql,(cid,uid))
+        ret['msg'] = '预约成功'
 
     return makeRespose(ret)
