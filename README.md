@@ -12,13 +12,13 @@ URL:https://api.youlanedu.com/
 
 #### Method URL
 
-POST /api/weChat/common/getCaptcha
+POST api/weChat/common/getCaptcha
 
 #### Headers
 
-| 参数 | 值   |
-| ---- | ---- |
-|      |      |
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
 
 #### Data
 
@@ -28,11 +28,11 @@ POST /api/weChat/common/getCaptcha
 
 #### Response
 
-| 返回字段 | 字段类型   | 说明     |
-| -------- | ---------- | -------- |
-| msg      | String     | 请求结果 |
-| code     | Int        | 请求状态 |
-| data     | Dictionary | 请求数据 |
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
 
 #### code 参数说明
 
@@ -73,7 +73,7 @@ POST /api/weChat/common/getCaptcha
 
 #### Method URL
 
-GET /api/weChat/user/queryPersonalCourse/\<int:status>/<openid>
+GET api/weChat/user/queryPersonalCourse/${status}/${openid}
 
 #### Headers
 
@@ -89,11 +89,11 @@ GET /api/weChat/user/queryPersonalCourse/\<int:status>/<openid>
 
 #### Response
 
-| 返回字段 | 字段类型   | 说明     |
-| -------- | ---------- | -------- |
-| msg      | String     | 请求结果 |
-| code     | Int        | 请求状态 |
-| data     | Dictionary | 请求数据 |
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
 
 #### code 参数说明
 
@@ -104,11 +104,11 @@ GET /api/weChat/user/queryPersonalCourse/\<int:status>/<openid>
 
 #### data 字典说明
 
-| key   | value | 说明         |
-| ----- | ----- | ------------ |
-| items | 数组  | 存放所有数据 |
+| key   | value      | 说明         |
+| ----- | ---------- | ------------ |
+| items | Json Array | 存放所有数据 |
 
-#### items 说明
+#### items 数据项说明
 
 | key         | value    |
 | ----------- | -------- |
@@ -152,11 +152,11 @@ GET /api/weChat/user/queryPersonalCourse/\<int:status>/<openid>
 
 #### Description ####
 
-获取用户详细信息
+获取用户详细信息（根据前端需求修改）
 
 #### Method URL
 
-POST /api/weChat/user/getUser/<openid>
+POST api/weChat/user/getUser/${openid}
 
 #### Headers
 
@@ -172,11 +172,11 @@ POST /api/weChat/user/getUser/<openid>
 
 #### Response
 
-| 返回字段 | 字段类型   | 说明     |
-| -------- | ---------- | -------- |
-| msg      | String     | 请求结果 |
-| code     | Int        | 请求状态 |
-| data     | Dictionary | 请求数据 |
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
 
 #### code 参数说明
 
@@ -224,11 +224,11 @@ POST /api/weChat/user/getUser/<openid>
 
 #### Description ####
 
-预约教师，需要在url中传参
+预约教师
 
 #### Method URL
 
-POST /api/weChat/user/reserveTeacher/<openid>/<tid>
+POST api/weChat/user/reserveTeacher/${openid}/${tid}
 
 #### Headers
 
@@ -291,19 +291,19 @@ POST /api/weChat/user/reserveTeacher/<openid>/<tid>
 
 #### Method URL
 
-POST /api/weChat/teacher/isRegistered
+POST api/weChat/teacher/isRegistered
 
 #### Headers
 
-| 参数 | 值   |
-| ---- | ---- |
-|      |      |
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
 
 #### Data
 
-| 参数 | 必选 | 类型   | 说明               |
-| ---- | ---- | ------ | ------------------ |
-| code | true | String | 用来获取openid的？ |
+| 参数 | 必选 | 类型   | 说明                 |
+| ---- | ---- | ------ | -------------------- |
+| code | true | String | 用来获取openid的？？ |
 
 #### Response
 
@@ -347,19 +347,20 @@ POST /api/weChat/teacher/isRegistered
 
 #### Method URL
 
-POST /api/weChat/teacher/register
+POST api/weChat/teacher/register
 
 #### Headers
 
-| 参数 | 值   |
-| ---- | ---- |
-|      |      |
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
 
 #### Data
 
-| 参数        | 必选 | 类型   | 说明                   |
-| ----------- | ---- | ------ | ---------------------- |
-| phoneNumber | true | String | 用于验证验证码是否正确 |
+| 参数        | 必选 | 类型   | 说明   |
+| ----------- | ---- | ------ | ------ |
+| phoneNumber | true | String | 手机号 |
+| captcha     | true | String | 验证码 |
 
 #### Response
 
@@ -400,11 +401,11 @@ POST /api/weChat/teacher/register
 
 #### Description ####
 
-教师查询可以投递订单（自动过滤自己已接订单）
+教师查询可以投递的课程（自动过滤自己已投递的课程）
 
 #### Method URL
 
-POST /api/weChat/teacher/getOrders/<openid>
+POST api/weChat/teacher/getOrders/${openid}
 
 #### Headers
 
@@ -420,11 +421,11 @@ POST /api/weChat/teacher/getOrders/<openid>
 
 #### Response
 
-| 返回字段 | 字段类型   | 说明     |
-| -------- | ---------- | -------- |
-| msg      | String     | 请求结果 |
-| code     | Int        | 请求状态 |
-| data     | Dictionary | 请求数据 |
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
 
 #### code 参数说明
 
@@ -433,26 +434,26 @@ POST /api/weChat/teacher/getOrders/<openid>
 | -1      | 失败 |
 | 0       | 成功 |
 
-#### data 参数说明
+#### data 字典说明
 
-| data值 | 说明                         |
-| ------ | ---------------------------- |
-| items  | 返回数据，是一个装字典的数组 |
+| key   | value      | 说明         |
+| ----- | ---------- | ------------ |
+| items | Json Array | 返回查询数据 |
 
-#### items 数组值说明
+#### items 数据项说明
 
-| key         | value    |
-| ----------- | -------- |
-| cid         | 课程Id   |
-| title       | 标题     |
-| subject     | 课程     |
-| grade       | 年级     |
-| remark      | 备注     |
-| courseTime  | 课程时间 |
-| coursePlace | 课程地点 |
-| teacherFee  | 课时薪酬 |
-| hours       | 总课时   |
-| createTime  | 创建时间 |
+| key         | value                  |
+| :---------- | :--------------------- |
+| cid         | 课程Id                 |
+| title       | 标题                   |
+| subject     | 课程                   |
+| grade       | 年级                   |
+| remark      | 备注                   |
+| courseTime  | 课程时间               |
+| coursePlace | 课程地点               |
+| teacherFee  | 课时薪酬（单小时薪酬） |
+| hours       | 总课时                 |
+| createTime  | 创建时间               |
 
 
 
@@ -475,5 +476,272 @@ POST /api/weChat/teacher/getOrders/<openid>
 ​				"items":[{'cid':1,'title':'高三语文'.......}]
 
 ​				}
+
+}
+
+
+
+### 【投递课程】 ###
+
+#### Description ####
+
+教师查询可以投递的课程（自动过滤自己已投递的课程）
+
+#### Method URL
+
+POST api/weChat/teacher/candidate
+
+#### Headers
+
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
+
+#### Data
+
+| 参数   | 必选 | 类型   | 说明         |
+| ------ | ---- | ------ | ------------ |
+| cid    | true | Int    | 投递课程Id   |
+| openid | true | String | 投递人openid |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "投递成功!",
+
+"code" : 0,
+
+"data" : {}
+
+}
+
+
+
+### 【取消投递】 ###
+
+#### Description ####
+
+取消已经投递的课程
+
+#### Method URL
+
+POST api/weChat/teacher/cancel
+
+#### Headers
+
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
+
+#### Data
+
+| 参数   | 必选 | 类型   | 说明             |
+| ------ | ---- | ------ | ---------------- |
+| cid    | true | Int    | 取消投递课程的Id |
+| openid | true | String | 投递人openid     |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "已取消投递",
+
+"code" : 0,
+
+"data" : {}
+
+}
+
+### 【获取投递订单】 ###
+
+#### Description ####
+
+教师查询可以投递的课程（自动过滤自己已投递的课程）
+
+#### Method URL
+
+POST api/weChat/teacher/getCandidatedOrders/${status}/${openid}
+
+#### Headers
+
+| 参数 | 值   |
+| ---- | ---- |
+|      |      |
+
+#### Data
+
+| 参数 | 必选 | 类型 | 说明 |
+| ---- | ---- | ---- | ---- |
+|      |      |      |      |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+#### data 字典说明
+
+| key   | value      | 说明         |
+| ----- | ---------- | ------------ |
+| items | Json Array | 返回查询数据 |
+
+#### items 数据项说明
+
+| key         | value                                                |
+| :---------- | :--------------------------------------------------- |
+| cid         | 课程Id                                               |
+| tid         | 分配的教员Id                                         |
+| title       | 标题                                                 |
+| subject     | 补习课程                                             |
+| grade       | 年级                                                 |
+| remark      | 备注                                                 |
+| courseTime  | 时间                                                 |
+| coursePlace | 地点                                                 |
+| teacherFee  | 课时薪酬                                             |
+| hours       | 总课时                                               |
+| status      | 课程进行状态（0分配教员，1试课中，2进行中，3已结课） |
+| createTime  | 创建时间                                             |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "注册成功",
+
+"code" : 0,
+
+"data" : {
+
+​				"items":[{'cid':1,'title':'高三语文'.......}]
+
+​				}
+
+}
+
+
+
+### 【消课申请】 ###
+
+#### Description ####
+
+取消已经投递的课程
+
+#### Method URL
+
+POST api/weChat/teacher/dismissalApplication
+
+#### Headers
+
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
+
+#### Data
+
+| 参数          | 必选 | 类型   | 说明             |
+| ------------- | ---- | ------ | ---------------- |
+| cid           | true | Int    | 取消投递课程的Id |
+| dismissedHour | true | String | 投递人openid     |
+| courseContent |      |        |                  |
+| startTime     |      |        |                  |
+|               |      |        |                  |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "已取消投递",
+
+"code" : 0,
+
+"data" : {}
 
 }

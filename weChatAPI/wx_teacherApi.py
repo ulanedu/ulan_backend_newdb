@@ -24,7 +24,7 @@ def isRegistered():
 @wx_teacher.route('/api/weChat/teacher/register', methods=['POST'])
 def register():
     ret = retModel.copy()
-    params = flask.request.get_json()
+    params = flask.request.get_json()['form']
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
     verifyCode = r.get(params['phoneNumber'])
 
@@ -77,6 +77,7 @@ def getOrders(openid):
         WHERE
         	Cour_DeleteStatus = 0 
         	AND Cour_Status = 0 
+            AND Cour_ShowStatus = 1
         	AND Cour_Id NOT IN (
         	SELECT
         		CoTe_CourseId 
@@ -152,13 +153,10 @@ def cancel():
     return makeRespose(ret)
 
 # 获取投递订单
-@wx_teacher.route('/api/weChat/teacher/getCandidatedOrders', methods=['POST'])
-def GetCandidatedOrders():
+@wx_teacher.route('/api/weChat/teacher/getCandidatedOrders/<int:status>/<openid>', methods=['POST'])
+def GetCandidatedOrders(status,openid):
     ret = retModel.copy()
     ret['data']['items'] = []
-    data = flask.request.get_json()
-    openid = data['openid']
-    orderStatus = data['orderStatus']
     tid = getTeacherIdByopenid(openid)
 
     with getCursor() as cs:
@@ -186,13 +184,13 @@ def GetCandidatedOrders():
         ORDER BY
         	CoTe_Time DESC
         '''
-        cs.execute(sql, (int(orderStatus), int(tid)))
+        cs.execute(sql, (int(status), int(tid)))
         data = cs.fetchall()
         dataKeys = ('cid', 'tid', 'title', 'subject', 'grade', 'remark', 'courseTime', 'coursePlace', 'teacherFee', 'hours', 'status', 'createTime')
         for item in data:
             item = list(item)
             # item[1] : 1(分配给了教员) 0(未分配) -1(分配阶段且未分配给教员)
-            if orderStatus > 0:
+            if status > 0:
                 if int(item[1]) != tid:
                     continue
                 else:
@@ -211,18 +209,18 @@ def GetCandidatedOrders():
     return makeRespose(ret)
 
 
-@wx_teacher.route('/api/wwChat/teacher/dismissalApplication', methods=['POST'])
+@wx_teacher.route('/api/weChat/teacher/dismissalApplication', methods=['POST'])
 def dismissalApplication():
     data = flask.request.get_json()
     ret = retModel.copy()
 
     with getCursor() as cs:
         sql = '''
-        INSERT INTO tbl_DismissalApplication ( DiAp_CourseId, DiAp_DismissedHour, DiAp_CourseContent, DiAp_StartTime, DiAp_CourseContent )
+        INSERT INTO tbl_DismissalApplication ( DiAp_CourseId, DiAp_DismissedHour, DiAp_CourseContent, DiAp_StartTime )
         VALUES
-	        (% s,% s,% s,% s,% s)
+	        (% s,% s,% s,% s)
         '''
-        cs.execute(sql, (data['cid'],data['dismissedHour'],data['courseContent'],data['startTime'],data['courseContent']))
+        cs.execute(sql, (data['cid'],data['dismissedHour'],data['courseContent'],data['startTime']))
         ret['msg'] = '申请成功'
 
     return makeRespose(ret)
