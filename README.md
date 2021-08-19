@@ -689,7 +689,7 @@ POST api/weChat/teacher/getCandidatedOrders/${status}/${openid}
 
 #### Description ####
 
-取消已经投递的课程
+消课申请
 
 #### Method URL
 
@@ -703,13 +703,12 @@ POST api/weChat/teacher/dismissalApplication
 
 #### Data
 
-| 参数          | 必选 | 类型   | 说明             |
-| ------------- | ---- | ------ | ---------------- |
-| cid           | true | Int    | 取消投递课程的Id |
-| dismissedHour | true | String | 投递人openid     |
-| courseContent |      |        |                  |
-| startTime     |      |        |                  |
-|               |      |        |                  |
+| 参数          | 必选 | 类型   | 说明         |
+| ------------- | ---- | ------ | ------------ |
+| cid           | true | Int    | 消课课程Id   |
+| dismissedHour | true | String | 课程时长     |
+| courseContent | true | String | 课程内容     |
+| startTime     | true | String | 课程开始时间 |
 
 #### Response
 
@@ -738,7 +737,236 @@ POST api/weChat/teacher/dismissalApplication
 
 {
 
-"msg" : "已取消投递",
+"msg" : "申请成功！",
+
+"code" : 0,
+
+"data" : {}
+
+}
+
+
+
+### 【课程讨论】 ###
+
+#### Description ####
+
+发布讨论
+
+#### Method URL
+
+POST api/weChat/teacher/courseDiscussion
+
+#### Headers
+
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
+
+#### Data
+
+| 参数    | 必选 | 类型   | 说明         |
+| ------- | ---- | ------ | ------------ |
+| cid     | true | Int    | 课程Id       |
+| openid  | true | String | 讨论人openid |
+| content | true | String | 讨论内容     |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "发布成功！",
+
+"code" : 0,
+
+"data" : {}
+
+}
+
+
+
+### 【获取教师简历】 ###
+
+#### Description ####
+
+获取教师简历
+
+#### Method URL
+
+POST api/weChat/teacher/getTeacherResume
+
+#### Headers
+
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
+
+#### Data
+
+| 参数   | 必选 | 类型   | 说明         |
+| ------ | ---- | ------ | ------------ |
+| openid | true | String | 讨论人openid |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+#### data 参数说明
+
+| key         | value  | 说明     |
+| ----------- | ------ | -------- |
+| tid         | Int    | 教师Id   |
+| name        | String | 姓名     |
+| sex         | String | 性别     |
+| nation      | String | 民族     |
+| politics    | String | 政治面貌 |
+| email       | String | 邮箱号   |
+| skilled     | String | 擅长科目 |
+| hobbies     | String | 兴趣爱好 |
+| school      | String | 学校     |
+| major       | String | 专业     |
+| grade       | String | 年级     |
+| honour      | String | 所获荣誉 |
+| teachExp    | String | 教学经历 |
+| evaluation  | String | 个人评价 |
+| freeTime    | String | 空闲时间 |
+| avatarURL   | String | 头像url  |
+| phoneNumber | String | 联系方式 |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "发布成功！",
+
+"code" : 0,
+
+"data" : {
+
+​			'tid':0,
+
+​			'name':'王恒',
+
+​			......
+
+​			}
+
+}
+
+### 【修改简历】 ###
+
+#### Description ####
+
+修改简历
+
+#### Method URL
+
+POST api/weChat/teacher/updateResume
+
+#### Headers
+
+| 参数         | 值               |
+| ------------ | ---------------- |
+| content-type | application/json |
+
+#### Data
+
+| 参数   | 必选 | 类型   | 说明         |
+| ------ | ---- | ------ | ------------ |
+| form   | true | Json   | 修改数据字典 |
+| openid | true | String | openid       |
+
+#### form 参数说明
+
+| key         | value  | 说明     |
+| ----------- | ------ | -------- |
+| name        | String | 姓名     |
+| sex         | String | 性别     |
+| nation      | String | 民族     |
+| politics    | String | 政治面貌 |
+| email       | String | 邮箱号   |
+| skilled     | String | 擅长科目 |
+| hobbies     | String | 兴趣爱好 |
+| school      | String | 学校     |
+| major       | String | 专业     |
+| grade       | String | 年级     |
+| honour      | String | 所获荣誉 |
+| teachExp    | String | 教学经历 |
+| evaluation  | String | 个人评价 |
+| freeTime    | String | 空闲时间 |
+| avatarURL   | String | 头像url  |
+| phoneNumber | String | 联系方式 |
+
+#### Response
+
+| 返回字段 | 字段类型 | 说明     |
+| -------- | -------- | -------- |
+| msg      | String   | 请求结果 |
+| code     | Int      | 请求状态 |
+| data     | Json     | 请求数据 |
+
+#### code 参数说明
+
+| code 值 | 说明 |
+| ------- | ---- |
+| -1      | 失败 |
+| 0       | 成功 |
+
+
+
+#### 调用示例
+
+{
+
+}
+
+#### 返回示例
+
+{
+
+"msg" : "发布成功！",
 
 "code" : 0,
 

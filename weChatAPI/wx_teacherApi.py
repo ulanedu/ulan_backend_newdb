@@ -261,7 +261,7 @@ def getTeacherResume():
         '''.format(tid)
         cs.execute(sql,int(tid))
         data = cs.fetchone()
-        dataKeys=('tid','name','sex','nation','politics','email','skilled','hobbies','school','major','grade','honour','teachExp','evaluation','free_time','avatarURL','phone_number')
+        dataKeys=('tid','name','sex','nation','politics','email','skilled','hobbies','school','major','grade','honour','teachExp','evaluation','freeTime','avatarURL','phoneNumber')
         ret['data']=dict(zip(dataKeys, data))
     return makeRespose(ret)
 
@@ -274,7 +274,7 @@ def updateResume():
     data = data['form']
     tid = getTeacherIdByopenid(openid)
     with getCursor() as cs:
-        sql_v2 = '''
+        sql = '''
         UPDATE tbl_TeacherResume 
         SET TeRe_Name = %s,
         TeRe_Sex = %s,
@@ -295,7 +295,7 @@ def updateResume():
         WHERE
         	TeRe_Id = %s
         '''
-        cs.execute(sql_v2,(data['name'],data['sex'],data['nation'],data['politics'],data['email'],data['skilled'],data['hobbies'],data['school'],data['major'],data['grade'],data['honour'],data['teachExp'],data['evaluation'],data['avatarURL'],data['free_time'],data['phone_number'],int(tid)))
+        cs.execute(sql,(data['name'],data['sex'],data['nation'],data['politics'],data['email'],data['skilled'],data['hobbies'],data['school'],data['major'],data['grade'],data['honour'],data['teachExp'],data['evaluation'],data['avatarURL'],data['freeTime'],data['phoneNumber'],int(tid)))
         ret['msg'] = '修改成功'
 
     return makeRespose(ret)
